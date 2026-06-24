@@ -19,9 +19,9 @@ User Message → IntakeAgent → TriageAgent → 7 Domain Agents (parallel)
 | Backend | FastAPI + Python 3.12 |
 | Database | Supabase free tier (PostgreSQL) |
 | Frontend | Next.js 15 + React 19 + Tailwind v4 + shadcn/ui + Framer Motion |
-| Deployment | Vercel (frontend) + Render (backend) |
+| Deployment | Render (single Docker container — backend serves frontend) |
 
-## Setup
+## Local Setup
 
 ### Prerequisites
 - Python 3.12+
@@ -31,11 +31,15 @@ User Message → IntakeAgent → TriageAgent → 7 Domain Agents (parallel)
 - Groq API key (free at [console.groq.com](https://console.groq.com))
 - Supabase project (free at [supabase.com](https://supabase.com))
 
+### Database
+
+Run `backend/app/db/schema.sql` in your Supabase SQL editor. This creates three tables: `compass_sessions`, `conversations`, and `action_items`.
+
 ### Backend
 
 ```bash
 cd backend
-cp .env.example .env        # fill in your API keys
+cp .env.example .env   # fill in your keys
 uv sync
 uv run uvicorn app.main:app --reload
 ```
@@ -44,19 +48,49 @@ uv run uvicorn app.main:app --reload
 
 ```bash
 cd frontend
-cp .env.example .env.local  # fill in your Supabase URL/key
 pnpm install
 pnpm dev
 ```
 
-### Database
+Frontend runs at `http://localhost:3000`, backend at `http://localhost:8000`.
 
-Run `backend/app/db/schema.sql` in your Supabase SQL editor.
+## Deployment (Render)
 
-## Development
+The root `Dockerfile` builds the Next.js frontend as a static export and embeds it inside the FastAPI backend. One service, one URL.
+
+1. Push to GitHub
+2. Create a new **Web Service** on [render.com](https://render.com)
+3. Connect your repo — root directory: `.`, runtime: Docker
+4. Add these environment variables:
+
+| Key | Description |
+|-----|-------------|
+| `GROQ_API_KEY` | From [console.groq.com](https://console.groq.com) |
+| `SUPABASE_URL` | Your Supabase project URL (`https://xxxx.supabase.co`) |
+| `SUPABASE_ANON_KEY` | Supabase anon/public key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
+| `ENVIRONMENT` | `production` |
+
+5. Deploy — your app will be live at the Render URL.
+
+## Project Structure
 
 ```
 compass/
-├── backend/   FastAPI + agents + Supabase
-└── frontend/  Next.js 15 + Tailwind + shadcn/ui
+├── Dockerfile           # single container: builds frontend + runs backend
+├── render.yaml          # Render deployment config
+├── backend/
+│   ├── app/
+│   │   ├── agents/      # IntakeAgent, TriageAgent, 7 domain agents, ConflictAgent, SynthesisAgent
+│   │   ├── api/         # FastAPI routes (SSE streaming, sessions, plans)
+│   │   ├── db/          # Supabase client + schema.sql
+│   │   ├── models/      # Pydantic v2 models
+│   │   └── services/    # Orchestrator, memory, Groq client
+│   └── requirements.txt
+└── frontend/
+    └── src/
+        ├── app/         # Next.js App Router pages
+        ├── components/  # Chat, AgentPanel, ActionPlan
+        ├── hooks/       # useCompass (SSE stream handler)
+        └── store/       # Zustand state
 ```
