@@ -1,7 +1,7 @@
 # ── Stage 1: Build Next.js static export ─────────────────────────
 FROM node:20-alpine AS frontend-builder
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 WORKDIR /frontend
 COPY frontend/package.json frontend/pnpm-lock.yaml* ./
