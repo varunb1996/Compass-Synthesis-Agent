@@ -80,7 +80,7 @@ export const useCompassStore = create<CompassStore>((set) => ({
     set((s) => ({
       agentStates: {
         ...s.agentStates,
-        [domain]: { domain, ...s.agentStates[domain], status, ...extra },
+        [domain]: { ...s.agentStates[domain], domain, status, ...extra },
       },
     })),
 
