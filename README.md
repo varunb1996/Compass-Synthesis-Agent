@@ -73,6 +73,8 @@ The root `Dockerfile` builds the Next.js frontend as a static export and embeds 
 
 5. Deploy — your app will be live at the Render URL.
 
+   https://compass-synthesis-agent.onrender.com/
+
 ## Project Structure
 
 ```
