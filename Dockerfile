@@ -10,8 +10,7 @@ RUN pnpm install --frozen-lockfile
 COPY frontend/ ./
 
 # Build-time public env vars
-ARG NEXT_PUBLIC_API_URL=/
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# No NEXT_PUBLIC_API_URL — defaults to "" so all API calls are relative to the same domain
 
 RUN pnpm build
 # output: "export" writes to /frontend/out
